@@ -86,6 +86,7 @@ docker-compose.override.yml
 ########################
 scripts/**/logs/
 scripts/**/tmp/
+/scripts
 
 ########################
 # Test runners & reports
