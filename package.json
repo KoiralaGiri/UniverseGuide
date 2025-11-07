@@ -1,0 +1,40 @@
+{
+  "name": "universeguide",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Immersive multi-scale celestial explorer powered by NASA and partner APIs",
+  "workspaces": [
+    "apps/client",
+    "packages/js/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/client",
+    "build": "npm run build --workspace=apps/client",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "type-check": "npm run type-check --workspaces"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/UniverseGuide.git"
+  },
+  "keywords": [
+    "nasa",
+    "space",
+    "astronomy",
+    "three.js",
+    "django",
+    "celery"
+  ],
+  "author": "UniverseGuide Team",
+  "license": "MIT"
+}
+

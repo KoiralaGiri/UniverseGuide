@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with PostGIS extension
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: universeguide-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-universeguide}
+      POSTGRES_USER: ${POSTGRES_USER:-universeguide}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-universeguide}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and Celery broker
+  redis:
+    image: redis:7-alpine
+    container_name: universeguide-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO for S3-compatible object storage (local development)
+  minio:
+    image: minio/minio:latest
+    container_name: universeguide-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Django API Gateway
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: universeguide-api
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.local
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./apps/ingestion
+      dockerfile: Dockerfile
+    container_name: universeguide-celery-worker
+    command: celery -A celery worker --loglevel=info
+    volumes:
+      - ./apps/ingestion:/app
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env.local
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: ./apps/ingestion
+      dockerfile: Dockerfile
+    container_name: universeguide-celery-beat
+    command: celery -A celery beat --loglevel=info
+    volumes:
+      - ./apps/ingestion:/app
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env.local
+
+  # Flower (Celery monitoring)
+  flower:
+    build:
+      context: ./apps/ingestion
+      dockerfile: Dockerfile
+    container_name: universeguide-flower
+    command: celery -A celery flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    env_file:
+      - .env.local
+
+  # Next.js Client
+  client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile
+    container_name: universeguide-client
+    command: npm run dev
+    volumes:
+      - ./apps/client:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
