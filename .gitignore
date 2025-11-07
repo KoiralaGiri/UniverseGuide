@@ -1,1 +1,108 @@
+# UniverseGuide Monorepo Git Ignore Rules
+
+########################
+# OS / Editor cruft
+########################
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+########################
+# Environment variables & secrets
+########################
+.env
+.env.*
+!.env.example
+.python-version
+.tool-versions
+
+########################
+# Node / Next.js workspaces (apps/client, packages/js/*)
+########################
+node_modules/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+.turbo/
+.next/
+.vercel/
+dist/
+out/
+.eslintcache
+coverage/
+.nyc_output/
+
+########################
+# Python / Django / Celery (apps/api, apps/ingestion, packages/py/*)
+########################
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.venv/
+venv/
+.tox/
+pip-wheel-metadata/
+celerybeat-schedule*
+*.log
+
+########################
+# Django collectstatic & build artifacts
+########################
+staticfiles/
+media/
+
+########################
+# Data workspace (large / generated artifacts)
+########################
+data/exports/
+data/tmp/
+data/cache/
+
+########################
+# Infrastructure tooling (terraform, pulumi, docker)
+########################
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+.terragrunt-cache/
+.pulumi/
+Pulumi.*.yaml
+Pulumi.*.json
+docker-compose.override.yml
+*.local.yaml
+
+########################
+# Scripts & automation outputs
+########################
+scripts/**/logs/
+scripts/**/tmp/
+
+########################
+# Test runners & reports
+########################
+tests/**/reports/
+tests/**/screenshots/
+tests/**/videos/
+
+########################
+# Miscellaneous
+########################
+tmp/
+*.tmp
+*.bak
+*.orig
+*.lock
+logs/
+nohup.out
 /.DS_Store
+/docs
